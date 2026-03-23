@@ -1,0 +1,124 @@
+###############################################################################
+# Issuer PostgreSQL + PostGIS - K3s Deployment
+#
+# Hosts database for the Issuer Service (mock Trust Anchor)
+###############################################################################
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: issuer-postgres-pvc
+  labels:
+    app: postgres
+    role: issuer
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 2Gi
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: issuer-postgres-init
+  labels:
+    app: postgres
+    role: issuer
+data:
+  init.sql: |
+    -- Issuer PostgreSQL Initialization
+    CREATE EXTENSION IF NOT EXISTS postgis;
+
+    -- Issuer service database
+    CREATE USER issuer WITH ENCRYPTED PASSWORD 'issuer' SUPERUSER;
+    CREATE DATABASE issuer;
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: issuer-postgres
+  labels:
+    app: postgres
+    role: issuer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+      role: issuer
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: postgres
+        role: issuer
+    spec:
+      containers:
+        - name: postgres
+          image: postgis/postgis:16-3.4-alpine
+          ports:
+            - containerPort: 5432
+              name: postgres
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: issuer-postgres-credentials
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: issuer-postgres-credentials
+                  key: POSTGRES_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+            - name: init-scripts
+              mountPath: /docker-entrypoint-initdb.d
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 10
+            timeoutSeconds: 5
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: issuer-postgres-pvc
+        - name: init-scripts
+          configMap:
+            name: issuer-postgres-init
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: issuer-postgres-service
+  labels:
+    app: postgres
+    role: issuer
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+      name: pg-port
+  selector:
+    app: postgres
+    role: issuer

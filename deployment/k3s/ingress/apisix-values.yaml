@@ -1,0 +1,69 @@
+# Apache APISIX Helm Values for EDC Gaia-X Dataspace on K3s
+# Purpose: Internal Policy Enforcement Point (PEP) and API Gateway
+# Sits in front of EDC Management APIs for rate limiting, auth, and routing
+
+apisix:
+  enabled: true
+  image:
+    repository: apache/apisix
+    tag: "3.9.1-debian"
+
+  replicaCount: 1
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  admin:
+    enabled: true
+    type: ClusterIP
+    port: 9180
+    credentials:
+      admin: "edc-admin-key"
+      viewer: "edc-viewer-key"
+
+gateway:
+  type: ClusterIP
+  http:
+    enabled: true
+    servicePort: 80
+    containerPort: 9080
+  tls:
+    enabled: false
+
+etcd:
+  enabled: true
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+dashboard:
+  enabled: true
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 9000
+
+plugins:
+  - api-breaker
+  - authz-keycloak
+  - cors
+  - ip-restriction
+  - key-auth
+  - limit-count
+  - limit-req
+  - prometheus
+  - proxy-rewrite
+  - real-ip
+  - redirect
+  - response-rewrite
+  - uri-blocker

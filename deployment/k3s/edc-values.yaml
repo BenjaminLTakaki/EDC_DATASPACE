@@ -1,0 +1,193 @@
+###############################################################################
+# EDC Helm Values Reference for K3s Deployment
+#
+# NOTE: The MVD uses Terraform (not Helm) to deploy EDC components.
+# This file documents the configuration values and can be used as a
+# reference if migrating to Helm-based deployment in the future.
+#
+# The actual deployment is handled by Terraform modules in:
+#   deployment/modules/connector/  - Control Plane + Data Plane
+#   deployment/modules/identity-hub/  - Identity Hub
+#   deployment/modules/catalog-server/  - Federated Catalog
+#   deployment/modules/issuer/  - Issuer Service
+#
+# Key differences from MVD defaults (for K3s/Gaia-X deployment):
+#   - Vault replaced with Kubernetes Secrets
+#   - KinD replaced with K3s
+#   - NGINX ingress replaced with Traefik
+#   - PostGIS used instead of plain PostgreSQL
+#   - local-path PVCs for persistent storage
+###############################################################################
+
+# ============================================================================
+# EDC Control Plane Configuration
+# ============================================================================
+controlplane:
+  image:
+    repository: controlplane
+    tag: latest
+    pullPolicy: Never  # Images are imported into K3s containerd
+
+  ports:
+    web: 8080          # Default API port (health checks)
+    management: 8081   # Management API (CRUD, requires API key)
+    protocol: 8082     # DSP Protocol (peer-to-peer connector communication)
+    control: 8083      # Internal control API (dataplane registration)
+    catalog: 8084      # Catalog API
+    debug: 1044        # JDWP remote debugging
+
+  env:
+    # Identity
+    EDC_IAM_DID_WEB_USE_HTTPS: "false"
+    WEB_HTTP_MANAGEMENT_AUTH_TYPE: "tokenbased"
+    WEB_HTTP_MANAGEMENT_AUTH_KEY: "password"
+
+    # Database (PostgreSQL with persistence)
+    EDC_SQL_SCHEMA_AUTOCREATE: "true"
+
+    # Catalog cache settings
+    EDC_CATALOG_CACHE_EXECUTION_DELAY_SECONDS: "10"
+    EDC_CATALOG_CACHE_EXECUTION_PERIOD_SECONDS: "10"
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+  probes:
+    liveness:
+      path: /api/check/liveness
+      port: 8080
+      failureThreshold: 10
+      periodSeconds: 5
+    readiness:
+      path: /api/check/readiness
+      port: 8080
+      failureThreshold: 10
+      periodSeconds: 5
+    startup:
+      path: /api/check/startup
+      port: 8080
+      failureThreshold: 10
+      periodSeconds: 5
+
+# ============================================================================
+# EDC Data Plane Configuration
+# ============================================================================
+dataplane:
+  image:
+    repository: dataplane
+    tag: latest
+    pullPolicy: Never
+
+  ports:
+    web: 8080
+    control: 8083
+    public: 11002      # Public API for data transfer (EDR-based access)
+    debug: 1044
+
+  env:
+    EDC_SQL_SCHEMA_AUTOCREATE: "true"
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+# ============================================================================
+# Identity Hub Configuration
+# ============================================================================
+identityhub:
+  image:
+    repository: identity-hub
+    tag: latest
+    pullPolicy: Never
+
+  ports:
+    web: 7080
+    management: 7081
+    identity: 7082     # Participant management
+    did: 7083          # DID document resolution
+    credentials: 7091  # Credentials API (VC storage/presentation)
+    sts: 7096          # Secure Token Service (OAuth token generation)
+    debug: 1044
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 384Mi
+    limits:
+      cpu: "1"
+      memory: 768Mi
+
+# ============================================================================
+# Catalog Server Configuration
+# ============================================================================
+catalogServer:
+  image:
+    repository: catalog-server
+    tag: latest
+    pullPolicy: Never
+
+  ports:
+    web: 8080
+    management: 8081
+    protocol: 8082
+    control: 8083
+    catalog: 8084
+    debug: 1044
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 384Mi
+    limits:
+      cpu: "1"
+      memory: 768Mi
+
+# ============================================================================
+# Issuer Service Configuration (Mock Trust Anchor)
+# ============================================================================
+issuerService:
+  image:
+    repository: issuerservice
+    tag: latest
+    pullPolicy: Never
+
+  ports:
+    web: 10010
+    admin: 10012
+    identity: 10014
+    did: 10016
+    sts: 10018
+    issuance: 10020
+    debug: 1044
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# ============================================================================
+# PostgreSQL + PostGIS Configuration
+# ============================================================================
+postgresql:
+  image: postgis/postgis:16-3.4-alpine
+  storageClass: local-path
+  storageSize: 5Gi
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi

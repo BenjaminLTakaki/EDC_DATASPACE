@@ -1,0 +1,152 @@
+###############################################################################
+# Provider PostgreSQL + PostGIS - K3s Deployment
+#
+# Hosts databases for:
+#   - provider_qna (Q&A connector control plane state)
+#   - provider_manufacturing (Manufacturing connector state)
+#   - catalog_server (Federated Catalog cache)
+#   - identity (Provider IdentityHub state)
+#
+# Uses PostGIS for geospatial ODRL policy evaluation (Phase 3).
+# Uses local-path PVC (K3s default StorageClass).
+###############################################################################
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: provider-postgres-pvc
+  labels:
+    app: postgres
+    role: provider
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: provider-postgres-init
+  labels:
+    app: postgres
+    role: provider
+data:
+  init.sql: |
+    -- Provider PostgreSQL Initialization
+    -- Creates all databases and users required by the Provider EDC stack
+
+    -- Enable PostGIS for geospatial policy evaluation
+    CREATE EXTENSION IF NOT EXISTS postgis;
+
+    -- Q&A Connector database
+    CREATE USER qna WITH ENCRYPTED PASSWORD 'provider-qna' SUPERUSER;
+    CREATE DATABASE provider_qna;
+
+    -- Manufacturing Connector database
+    CREATE USER manufacturing WITH ENCRYPTED PASSWORD 'provider-manufacturing' SUPERUSER;
+    CREATE DATABASE provider_manufacturing;
+
+    -- Catalog Server database
+    CREATE USER catalog_server WITH ENCRYPTED PASSWORD 'catalog_server' SUPERUSER;
+    CREATE DATABASE catalog_server;
+
+    -- IdentityHub database
+    CREATE USER identity WITH ENCRYPTED PASSWORD 'identity' SUPERUSER;
+    CREATE DATABASE identity;
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: provider-postgres
+  labels:
+    app: postgres
+    role: provider
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+      role: provider
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: postgres
+        role: provider
+    spec:
+      containers:
+        - name: postgres
+          image: postgis/postgis:16-3.4-alpine
+          ports:
+            - containerPort: 5432
+              name: postgres
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: provider-postgres-credentials
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: provider-postgres-credentials
+                  key: POSTGRES_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+            - name: init-scripts
+              mountPath: /docker-entrypoint-initdb.d
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: provider-postgres-pvc
+        - name: init-scripts
+          configMap:
+            name: provider-postgres-init
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: provider-postgres-service
+  labels:
+    app: postgres
+    role: provider
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+      name: pg-port
+  selector:
+    app: postgres
+    role: provider

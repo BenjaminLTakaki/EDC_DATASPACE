@@ -1,0 +1,58 @@
+# Traefik Helm Values for EDC Gaia-X Dataspace on K3s
+# Replaces NGINX ingress from MVD's KinD setup
+#
+# Purpose: External TLS/SSL termination and routing for EDC components
+# Routes traffic to Control Planes, Data Planes, Identity Hubs, and Catalog Server
+
+deployment:
+  replicas: 1
+
+# Disable default IngressRoute for dashboard (we'll create our own if needed)
+ingressRoute:
+  dashboard:
+    enabled: false
+
+ports:
+  web:
+    port: 8000
+    expose:
+      default: true
+    exposedPort: 80
+    protocol: TCP
+    # Redirect HTTP to HTTPS in production
+    # redirectTo:
+    #   port: websecure
+  websecure:
+    port: 8443
+    expose:
+      default: true
+    exposedPort: 443
+    protocol: TCP
+    tls:
+      enabled: true
+
+service:
+  type: LoadBalancer
+
+# Resource constraints for Fontys Netlab
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+# Enable access logs for debugging DSP protocol flows
+logs:
+  general:
+    level: INFO
+  access:
+    enabled: true
+    format: json
+
+# Additional Traefik configuration
+additionalArguments:
+  - "--api.insecure=true"
+  - "--providers.kubernetesingress.allowexternalnameservices=true"
+  - "--providers.kubernetescrd"

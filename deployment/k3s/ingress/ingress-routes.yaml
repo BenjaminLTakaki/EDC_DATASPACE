@@ -1,0 +1,202 @@
+###############################################################################
+# Traefik IngressRoute Definitions for EDC Gaia-X Dataspace
+#
+# Replaces the NGINX Ingress from MVD's KinD setup with Traefik IngressRoutes.
+# Maps external paths to internal EDC services, mirroring the MVD routing
+# convention: /<participant>/<component>/...
+#
+# These routes match what seed-k8s.sh expects (e.g., http://127.0.0.1/provider-qna/cp)
+###############################################################################
+
+# ============================================================================
+# Kubernetes Ingress resources (works with Traefik's Kubernetes Ingress provider)
+# ============================================================================
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: edc-provider-qna-ingress
+  namespace: mvd
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  rules:
+    - http:
+        paths:
+          # Provider Q&A Control Plane - Management API
+          - path: /provider-qna/cp
+            pathType: Prefix
+            backend:
+              service:
+                name: provider-qna-controlplane
+                port:
+                  number: 8081
+          # Provider Q&A Control Plane - DSP Protocol
+          - path: /provider-qna/dsp
+            pathType: Prefix
+            backend:
+              service:
+                name: provider-qna-controlplane
+                port:
+                  number: 8082
+          # Provider Q&A Data Plane - Public API
+          - path: /provider-qna/dp
+            pathType: Prefix
+            backend:
+              service:
+                name: provider-qna-dataplane
+                port:
+                  number: 11002
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: edc-provider-manufacturing-ingress
+  namespace: mvd
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  rules:
+    - http:
+        paths:
+          # Provider Manufacturing Control Plane - Management API
+          - path: /provider-manufacturing/cp
+            pathType: Prefix
+            backend:
+              service:
+                name: provider-manufacturing-controlplane
+                port:
+                  number: 8081
+          # Provider Manufacturing Control Plane - DSP Protocol
+          - path: /provider-manufacturing/dsp
+            pathType: Prefix
+            backend:
+              service:
+                name: provider-manufacturing-controlplane
+                port:
+                  number: 8082
+          # Provider Manufacturing Data Plane - Public API
+          - path: /provider-manufacturing/dp
+            pathType: Prefix
+            backend:
+              service:
+                name: provider-manufacturing-dataplane
+                port:
+                  number: 11002
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: edc-consumer-ingress
+  namespace: mvd
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  rules:
+    - http:
+        paths:
+          # Consumer Control Plane - Management API
+          - path: /consumer/cp
+            pathType: Prefix
+            backend:
+              service:
+                name: consumer-controlplane
+                port:
+                  number: 8081
+          # Consumer Control Plane - DSP Protocol
+          - path: /consumer/dsp
+            pathType: Prefix
+            backend:
+              service:
+                name: consumer-controlplane
+                port:
+                  number: 8082
+          # Consumer Data Plane - Public API
+          - path: /consumer/dp
+            pathType: Prefix
+            backend:
+              service:
+                name: consumer-dataplane
+                port:
+                  number: 11002
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: edc-identityhub-ingress
+  namespace: mvd
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  rules:
+    - http:
+        paths:
+          # Consumer IdentityHub - Credentials/Identity/DID/STS
+          - path: /consumer/cs
+            pathType: Prefix
+            backend:
+              service:
+                name: consumer-identityhub
+                port:
+                  number: 7082
+          # Provider IdentityHub
+          - path: /provider/cs
+            pathType: Prefix
+            backend:
+              service:
+                name: provider-identityhub
+                port:
+                  number: 7082
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: edc-catalog-server-ingress
+  namespace: mvd
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  rules:
+    - http:
+        paths:
+          # Provider Catalog Server - Management API
+          - path: /provider-catalog-server/cp
+            pathType: Prefix
+            backend:
+              service:
+                name: provider-catalog-server-controlplane
+                port:
+                  number: 8081
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: edc-issuer-ingress
+  namespace: mvd
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  rules:
+    - http:
+        paths:
+          # Issuer Service - Admin API
+          - path: /issuer/ad
+            pathType: Prefix
+            backend:
+              service:
+                name: dataspace-issuer-service
+                port:
+                  number: 10012
+          # Issuer IdentityHub
+          - path: /issuer/cs
+            pathType: Prefix
+            backend:
+              service:
+                name: dataspace-issuer-service
+                port:
+                  number: 10016
