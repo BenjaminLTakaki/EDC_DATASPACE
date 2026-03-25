@@ -23,8 +23,6 @@ This document provides a comprehensive gap analysis between the architectural bl
 3. [Infrastructure Requirements](#3-infrastructure-requirements)
 4. [Phase-by-Phase Implementation Requirements](#4-phase-by-phase-implementation-requirements)
 5. [Testing Scenario Requirements](#5-testing-scenario-requirements)
-6. [Detailed Task Breakdown](#6-detailed-task-breakdown)
-7. [Risk Assessment](#7-risk-assessment)
 
 ---
 
@@ -241,30 +239,30 @@ This document provides a comprehensive gap analysis between the architectural bl
 
 ### Phase 1: Foundational Infrastructure (Weeks 1-3) - **COMPLETE**
 
-| Task | Responsible | Status | Deliverable |
-|------|-------------|--------|-------------|
-| K3s cluster deployment | Benjamin | **DONE** | Running cluster on Netlab |
-| Traefik ingress installation | Benjamin | **DONE** | `traefik-values.yaml` |
-| APISIX gateway installation | Benjamin | **DONE** | `apisix-values.yaml` |
-| PostgreSQL/PostGIS deployment | Benjamin | **DONE** | `*-postgres.yaml` manifests |
-| Kubernetes Secrets setup | Benjamin | **DONE** | `02-create-secrets.sh` |
-| Base EDC deployment | Benjamin/Georgi | **IN PROGRESS** | `edc-values.yaml` |
+| Task | Status | Deliverable |
+|------|--------|-------------|
+| K3s cluster deployment | **DONE** | Running cluster on Netlab |
+| Traefik ingress installation | **DONE** | `traefik-values.yaml` |
+| APISIX gateway installation | **DONE** | `apisix-values.yaml` |
+| PostgreSQL/PostGIS deployment | **DONE** | `*-postgres.yaml` manifests |
+| Kubernetes Secrets setup | **DONE** | `02-create-secrets.sh` |
+| Base EDC deployment | **IN PROGRESS** | `edc-values.yaml` |
 
 ---
 
 ### Phase 2: Identity Layer and Mock Trust Anchor (Weeks 4-7) - **NOT STARTED**
 
-| Task | Responsible | Status | Deliverable |
-|------|-------------|--------|-------------|
-| EC key pair generation | Juul | **TODO** | Shell script with OpenSSL commands |
-| did:web document creation | Juul | **TODO** | JSON DID documents per participant |
-| DID document hosting | Benjamin | **TODO** | Nginx/static server deployment |
-| Private key ingestion to K8s Secrets | Juul/Benjamin | **TODO** | kubectl commands in script |
-| Mock Trust Anchor deployment | Juul | **TODO** | Deployment YAML + API |
-| JSON-LD Self-Description drafting | Juul/Dimitar | **TODO** | Self-description JSON files |
-| LegalParticipant VC issuance | Juul | **TODO** | Issuer API + VC templates |
-| Identity Hub configuration | Juul | **TODO** | Helm values for Identity Hub |
-| VC injection into Identity Hubs | Juul | **TODO** | DCP API calls |
+| Task | Status | Deliverable |
+|------|--------|-------------|
+| EC key pair generation | **TODO** | Shell script with OpenSSL commands |
+| did:web document creation | **TODO** | JSON DID documents per participant |
+| DID document hosting | **TODO** | Nginx/static server deployment |
+| Private key ingestion to K8s Secrets | **TODO** | kubectl commands in script |
+| Mock Trust Anchor deployment | **TODO** | Deployment YAML + API |
+| JSON-LD Self-Description drafting | **TODO** | Self-description JSON files |
+| LegalParticipant VC issuance | **TODO** | Issuer API + VC templates |
+| Identity Hub configuration | **TODO** | Helm values for Identity Hub |
+| VC injection into Identity Hubs | **TODO** | DCP API calls |
 
 **Dependencies:**
 - Phase 1 must be complete (K8s cluster, secrets infrastructure)
@@ -295,14 +293,14 @@ deployment/k3s/identity/
 
 ### Phase 3: Policy Engine Configuration (Weeks 8-10) - **NOT STARTED**
 
-| Task | Responsible | Status | Deliverable |
-|------|-------------|--------|-------------|
-| TimeIntervalUsage PolicyFunction | Georgi | **TODO** | Java class |
-| RegionLocation PolicyFunction | Georgi | **TODO** | Java class |
-| PolicyFunction registry binding | Georgi | **TODO** | Extension class |
-| ODRL policy JSON-LD drafting | Dimitar | **TODO** | Policy JSON files |
-| Unit tests for PolicyFunctions | Georgi | **TODO** | JUnit test classes |
-| Integration with Control Plane | Georgi | **TODO** | Updated EDC build |
+| Task | Status | Deliverable |
+|------|--------|-------------|
+| TimeIntervalUsage PolicyFunction | **TODO** | Java class |
+| RegionLocation PolicyFunction | **TODO** | Java class |
+| PolicyFunction registry binding | **TODO** | Extension class |
+| ODRL policy JSON-LD drafting | **TODO** | Policy JSON files |
+| Unit tests for PolicyFunctions | **TODO** | JUnit test classes |
+| Integration with Control Plane | **TODO** | Updated EDC build |
 
 **Dependencies:**
 - Phase 2 must be complete (VCs available for policy evaluation)
@@ -359,15 +357,15 @@ public class RegionLocationFunction implements AtomicConstraintRuleFunction<Perm
 
 ### Phase 4: Federated Catalog and Data Dashboard (Weeks 11-13) - **NOT STARTED**
 
-| Task | Responsible | Status | Deliverable |
-|------|-------------|--------|-------------|
-| Federated Catalog crawler configuration | Benjamin | **TODO** | Updated FC values |
-| Participant DID registration in crawler | Benjamin | **TODO** | Crawler config |
-| Data Dashboard deployment | Benjamin | **TODO** | Dashboard Helm chart |
-| Dashboard ↔ Management API wiring | Benjamin | **TODO** | Configuration |
-| Simulated asset injection | Dimitar | **TODO** | curl/Postman scripts |
-| Contract definition creation | Dimitar | **TODO** | API calls linking assets to policies |
-| End-to-end asset discovery test | Dimitar | **TODO** | Test script |
+| Task | Status | Deliverable |
+|------|--------|-------------|
+| Federated Catalog crawler configuration | **TODO** | Updated FC values |
+| Participant DID registration in crawler | **TODO** | Crawler config |
+| Data Dashboard deployment | **TODO** | Dashboard Helm chart |
+| Dashboard ↔ Management API wiring | **TODO** | Configuration |
+| Simulated asset injection | **TODO** | curl/Postman scripts |
+| Contract definition creation | **TODO** | API calls linking assets to policies |
+| End-to-end asset discovery test | **TODO** | Test script |
 
 **Dependencies:**
 - Phase 3 must be complete (policies available to attach to assets)
@@ -397,16 +395,16 @@ scripts/seed-data/
 
 ### Phase 5: System Integration and Hardening (Weeks 14-16) - **NOT STARTED**
 
-| Task | Responsible | Status | Deliverable |
-|------|-------------|--------|-------------|
-| Integration test script | Dimitar | **TODO** | `integration-test.sh` |
-| Contract negotiation flow test | Dimitar | **TODO** | Test scenario 1 |
-| VP verification flow test | Juul/Dimitar | **TODO** | Test scenario 2 |
-| Time-bound policy expiration test | Georgi/Dimitar | **TODO** | Test scenario 3 |
-| Geographic constraint test | Georgi/Dimitar | **TODO** | Test scenario 4 |
-| EDR token revocation test | Dimitar | **TODO** | Revocation verification |
-| Documentation | All | **TODO** | Final technical docs |
-| Deployment automation finalization | Benjamin | **TODO** | Production-ready scripts |
+| Task | Status | Deliverable |
+|------|--------|-------------|
+| Integration test script | **TODO** | `integration-test.sh` |
+| Contract negotiation flow test | **TODO** | Test scenario 1 |
+| VP verification flow test | **TODO** | Test scenario 2 |
+| Time-bound policy expiration test | **TODO** | Test scenario 3 |
+| Geographic constraint test | **TODO** | Test scenario 4 |
+| EDR token revocation test | **TODO** | Revocation verification |
+| Documentation | **TODO** | Final technical docs |
+| Deployment automation finalization | **TODO** | Production-ready scripts |
 
 **Key Files to Create:**
 ```
@@ -490,98 +488,6 @@ tests/integration/
 3. **Expected:** Policy evaluation fails on geographic mismatch
 4. Consumer with EU-located credentials attempts negotiation
 5. **Expected:** Negotiation succeeds
-
----
-
-## 6. Detailed Task Breakdown
-
-### 6.1 Java Development Tasks (Georgi)
-
-| Task ID | Description | Estimated Hours | Dependencies |
-|---------|-------------|-----------------|--------------|
-| J-001 | Set up policy-functions extension module | 4 | None |
-| J-002 | Implement TimeIntervalUsageFunction | 8 | J-001 |
-| J-003 | Implement RegionLocationFunction | 8 | J-001 |
-| J-004 | Create GaiaXPolicyExtension (registry binding) | 4 | J-002, J-003 |
-| J-005 | Write unit tests | 8 | J-002, J-003 |
-| J-006 | Integration testing with Control Plane | 8 | J-004 |
-| **Total** | | **40 hours** | |
-
----
-
-### 6.2 Identity/IAM Tasks (Juul)
-
-| Task ID | Description | Estimated Hours | Dependencies |
-|---------|-------------|-----------------|--------------|
-| I-001 | Research Gaia-X LegalParticipant VC schema | 4 | None |
-| I-002 | Generate EC key pairs for all participants | 2 | None |
-| I-003 | Create did:web documents | 4 | I-002 |
-| I-004 | Draft JSON-LD Self-Descriptions | 8 | I-001 |
-| I-005 | Deploy mock Trust Anchor | 8 | I-003 |
-| I-006 | Implement LegalParticipant VC issuance | 12 | I-004, I-005 |
-| I-007 | Configure Identity Hub DCP | 8 | I-003, I-006 |
-| I-008 | Create CertifiedEnvironmentalResearcher VC schema | 4 | I-001 |
-| I-009 | Test VP flows end-to-end | 8 | I-007 |
-| **Total** | | **58 hours** | |
-
----
-
-### 6.3 Infrastructure Tasks (Benjamin)
-
-| Task ID | Description | Estimated Hours | Dependencies |
-|---------|-------------|-----------------|--------------|
-| B-001 | Complete Phase 1 deployment verification | 4 | None |
-| B-002 | Host DID documents on Netlab | 4 | I-003 |
-| B-003 | Configure Federated Catalog crawler | 4 | Phase 2 complete |
-| B-004 | Deploy EDC Data Dashboard | 8 | B-003 |
-| B-005 | Wire Dashboard to Management APIs | 4 | B-004 |
-| B-006 | Create deployment documentation | 8 | All phases |
-| B-007 | Finalize production deployment scripts | 8 | All phases |
-| **Total** | | **40 hours** | |
-
----
-
-### 6.4 Testing/Use Case Tasks (Dimitar)
-
-| Task ID | Description | Estimated Hours | Dependencies |
-|---------|-------------|-----------------|--------------|
-| T-001 | Design simulated entity profiles (Alpha/Beta) | 4 | None |
-| T-002 | Create test asset JSON payloads | 4 | None |
-| T-003 | Write asset injection scripts | 4 | B-004 |
-| T-004 | Create contract definition scripts | 4 | T-003, J-004 |
-| T-005 | Implement integration-test.sh framework | 8 | Phase 4 complete |
-| T-006 | Implement time-bound test scenario | 4 | T-005, J-002 |
-| T-007 | Implement credential ABAC test scenario | 4 | T-005, I-008 |
-| T-008 | Implement geographic test scenario | 4 | T-005, J-003 |
-| T-009 | Document test results | 8 | T-006, T-007, T-008 |
-| **Total** | | **44 hours** | |
-
----
-
-## 7. Risk Assessment
-
-### High Risk Items
-
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Java PolicyFunction complexity | Delays Phase 3 | Use MVD's existing functions as templates |
-| Gaia-X credential schema ambiguity | Blocks Phase 2 | Reference official Gaia-X Trust Framework docs |
-| Netlab network connectivity issues | Blocks all testing | Establish VPN reliability early |
-
-### Medium Risk Items
-
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| EDC version compatibility | Build failures | Pin to specific EDC release (0.12.x) |
-| Dashboard UI complexity | Scope creep | Accept API-only if time constrained |
-| PostGIS spatial queries | Over-engineering | Use simple string matching for regions initially |
-
-### Low Risk Items
-
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Helm chart schema changes | Minor deployment fixes | Test against chart versions before deployment |
-| Documentation gaps | Knowledge loss | Document as we build |
 
 ---
 
